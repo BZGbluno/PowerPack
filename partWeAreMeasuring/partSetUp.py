@@ -239,10 +239,10 @@ class Measurements:
             writer.writerows(self.data)
 
 
-    def plot(self, times):
+    def plot(self, times, verticalAsymtotes=None):
         '''
         This will turn the data matrix into a graph and save it 
-        a directoy named graph
+        a directoy named graph.
         '''
         dataWithNoChannelInfo = []
         voltageAmounts = []
@@ -251,20 +251,23 @@ class Measurements:
             dataWithNoChannelInfo.append(row[2:])
             voltageAmounts.append(row[1])
 
-        self._plotGraphs(times, dataWithNoChannelInfo, self.name, voltageAmounts)
+        self._plotGraphs(times, dataWithNoChannelInfo, self.name, voltageAmounts, verticalAsymtotes)
 
 
-    def _plotGraphs(self, time, lines, name, voltageAmount):
+    def _plotGraphs(self, time, lines, name, voltageAmount, verticalAsymtotes=None):
         '''
         This will plot the different lines which are arrays as the y-axis and
         the x-axis is the time array. This is a private method to help with
-        plotting
+        plotting. It will also add vertical Asymtote to the graph if they exist
         '''
         
         plt.figure()
         for index, line in enumerate(lines):
             plt.plot(time, line, label=f'{voltageAmount[index]} line', lw=2)
 
+        if verticalAsymtotes:
+            for asymtote in verticalAsymtotes:
+                plt.axvline(x=asymtote, color='r', linestyle='--', label=f'{verticalAsymtotes[asymtote]}')
         plt.xlabel('Time in sec')
         plt.ylabel('Watts')
         plt.title(f'{name} Power Consumption Graph')

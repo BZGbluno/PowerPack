@@ -157,10 +157,12 @@ class PowerPack:
             part.makeCSV()
 
 
-    def plot(self):
+    def plot(self, verticalAsymtotes=None):
         '''
         This will make a graph of the data for each part of the computer.Use this
-        only after start and stopping the powerpack otherwise no data to be read
+        only after start and stopping the powerpack otherwise no data to be read.
+        This plot function also takes in a dictionary that has time stamps as keys
+        and the name of section you are covering as the value
         '''
         times = []
         passedTime = 0
@@ -172,7 +174,11 @@ class PowerPack:
         print(times)
 
         for part in self.registeredParts:
-            part.plot(times)
+            if verticalAsymtotes:
+                part.plot(times, verticalAsymtotes)
+            else:
+                part.plot(times)
+
 
 
 
@@ -203,7 +209,11 @@ if __name__ == "__main__":
 
     # Plot information
     power_pack.makeCSVs()
-    power_pack.plot()
+
+    # Example of a adding a asymtote that occurs on the 1st second.
+    # In this case, it is named cool
+    asymtote = {1:"cool"}
+    power_pack.plot(asymtote)
 
     print("Main thread exiting")
 
