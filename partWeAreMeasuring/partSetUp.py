@@ -262,8 +262,6 @@ class Measurements:
         '''
         
         plt.figure()
-        # for index, line in enumerate(lines):
-        #     plt.plot(time, line, label=f'{voltageAmount[index]} line', lw=2)
 
         if verticalAsymtotes:
             for asymtote in verticalAsymtotes:

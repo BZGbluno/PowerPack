@@ -132,7 +132,9 @@ class PowerPack:
         for thread in self.threads:
             thread.start()
         self.started = True
-        print(str(time.time()) + " end of start function")
+        began = str(time.time())
+        with open('./measurements/startFunc.txt', 'a') as f:
+            f.write(f"{began}\n")
 
         
 
@@ -149,7 +151,10 @@ class PowerPack:
         self.endTime = time.time()
         self.TotalTime = self.endTime - self.startTime
         self.started = False
-        print(str(time.time()) + " end of stop")
+        ended = str(time.time())
+
+        with open('./measurements/endFunc.txt', 'a') as f:
+            f.write(f"{ended}\n")
 
         
 

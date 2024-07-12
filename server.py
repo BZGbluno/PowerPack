@@ -63,18 +63,24 @@ def start_server(ip, port):
             
             # Process Starting message being sent
             client_socket.sendall(processStarting.encode('utf-8'))
+
             # Running the class
-            print(str(time.time()) + " SubProcess being called")
+            began = str(time.time())
             result = subprocess.run(["python3","timeWatch.py", "5"], capture_output=True, text=True)
 
             # Process Finished message being sent
             processComplete = "Process finished"
-            print(str(time.time()) + "Subprocess ending")
+            ended = str(time.time())
             client_socket.sendall(processComplete.encode('utf-8'))
 
             #Printing out any errors
             print("Output:\n", result.stdout)
             print("Errors:\n", result.stderr)
+
+            with open('./measurements/beganSub.txt', 'a') as f:
+                f.write(f"{began}\n")
+            with open('./measurements/endSub.txt', 'a') as f:
+                f.write(f"{ended}\n")
 
 
             client_socket.close()

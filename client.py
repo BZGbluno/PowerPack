@@ -41,18 +41,23 @@ def measure(ip, port, message):
         if startMeasuring:
             print(f"Response from server: {startMeasuring.decode('utf-8')}\n\n")
             
-            print(str(time.time()) + "calling the the start function")
+            began = str(time.time())
             power_pack.start()
 
         # Recieve response from the server to stop measuring
         stopMeasuring = client_socket.recv(16).decode('utf-8')
         if stopMeasuring:
             print("The process has been completed, so stop measuring\n\n")
-            print(str(time.time()) + "calling the stop function")
+            ended = str(time.time())
             power_pack.stop()
             print(f"\n\n{stopMeasuring}\n\n")
+        
     
     times = reader('output.txt')
+    with open('./measurements/clientStart.txt', 'a') as f:
+        f.write(f"{began}\n")
+    with open('./measurements/clientEnd.txt', 'a') as f:
+        f.write(f"{ended}\n")
     return times
 
 
