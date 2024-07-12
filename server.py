@@ -3,6 +3,7 @@ import signal
 import sys
 import subprocess
 import json
+from datetime import datetime
 import time
 
 def reader(file):
@@ -62,12 +63,13 @@ def start_server(ip, port):
             
             # Process Starting message being sent
             client_socket.sendall(processStarting.encode('utf-8'))
-
             # Running the class
+            print(str(time.time()) + " SubProcess being called")
             result = subprocess.run(["python3","timeWatch.py", "5"], capture_output=True, text=True)
 
             # Process Finished message being sent
             processComplete = "Process finished"
+            print(str(time.time()) + "Subprocess ending")
             client_socket.sendall(processComplete.encode('utf-8'))
 
             #Printing out any errors

@@ -2,6 +2,7 @@ from partWeAreMeasuring.partSetUp import Measurements
 import threading
 import time
 from typing import List
+from datetime import datetime
 '''
 This class is a wrapper and is in charge of running the task of the
 different parts in the computer. It is also in charge of calling their
@@ -131,6 +132,9 @@ class PowerPack:
         for thread in self.threads:
             thread.start()
         self.started = True
+        print(str(time.time()) + " end of start function")
+
+        
 
     def stop(self):
         '''
@@ -145,6 +149,7 @@ class PowerPack:
         self.endTime = time.time()
         self.TotalTime = self.endTime - self.startTime
         self.started = False
+        print(str(time.time()) + " end of stop")
 
         
 

@@ -262,12 +262,16 @@ class Measurements:
         '''
         
         plt.figure()
-        for index, line in enumerate(lines):
-            plt.plot(time, line, label=f'{voltageAmount[index]} line', lw=2)
+        # for index, line in enumerate(lines):
+        #     plt.plot(time, line, label=f'{voltageAmount[index]} line', lw=2)
 
         if verticalAsymtotes:
             for asymtote in verticalAsymtotes:
-                plt.axvline(x=asymtote, color='r', linestyle='--', label=f'{verticalAsymtotes[asymtote]}')
+                plt.axvline(x=float(asymtote), color='r', linestyle='--', label=f'{verticalAsymtotes[asymtote]}')
+
+        for index, line in enumerate(lines):
+            plt.plot(time, line, label=f'{voltageAmount[index]} line', lw=2)
+
         plt.xlabel('Time in sec')
         plt.ylabel('Watts')
         plt.title(f'{name} Power Consumption Graph')

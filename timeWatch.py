@@ -9,6 +9,8 @@ if len(args) != 2:
 
 tiempo = args[1]
 print("In time")
+
+# represents the function
 time.sleep(int(tiempo))
 times = {2:"Step 1", 3: "step 2"}
 

@@ -2,6 +2,8 @@ from powerMeasurer import PowerPack
 import socket
 import json
 import socket
+from datetime import datetime
+import time
 
 SERVER_IP = "127.0.0.1" # refers to your own machine 
 SERVER_PORT = 25565
@@ -38,12 +40,15 @@ def measure(ip, port, message):
         startMeasuring = client_socket.recv(16)
         if startMeasuring:
             print(f"Response from server: {startMeasuring.decode('utf-8')}\n\n")
+            
+            print(str(time.time()) + "calling the the start function")
             power_pack.start()
 
         # Recieve response from the server to stop measuring
         stopMeasuring = client_socket.recv(16).decode('utf-8')
         if stopMeasuring:
             print("The process has been completed, so stop measuring\n\n")
+            print(str(time.time()) + "calling the stop function")
             power_pack.stop()
             print(f"\n\n{stopMeasuring}\n\n")
     
