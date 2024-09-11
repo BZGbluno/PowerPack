@@ -1,13 +1,8 @@
 from partWeAreMeasuring.partSetUp import Measurements
 import threading
 import time
-from typing import List
-from datetime import datetime
-'''
-This class is a wrapper and is in charge of running the task of the
-different parts in the computer. It is also in charge of calling their
-functionality. 
-'''
+
+
 class PowerPack:
     '''
     This class is a wrapper and is in charge of running the task of the
@@ -132,9 +127,9 @@ class PowerPack:
         for thread in self.threads:
             thread.start()
         self.started = True
-        began = str(time.time())
-        with open('./measurements/startFunc.txt', 'a') as f:
-            f.write(f"{began}\n")
+        # began = str(time.time())
+        # with open('./measurements/startFunc.txt', 'a') as f:
+        #     f.write(f"{began}\n")
 
         
 
@@ -151,10 +146,6 @@ class PowerPack:
         self.endTime = time.time()
         self.TotalTime = self.endTime - self.startTime
         self.started = False
-        ended = str(time.time())
-
-        with open('./measurements/endFunc.txt', 'a') as f:
-            f.write(f"{ended}\n")
 
         
 
@@ -174,10 +165,11 @@ class PowerPack:
         This plot function also takes in a dictionary that has time stamps as keys
         and the name of section you are covering as the value
         '''
+        #print(self.registeredParts[0].lengths())
         times = []
         passedTime = 0
         times.append(passedTime)
-        for x in range(0, self.gpu.lengths()-1):
+        for _ in range(0, self.registeredParts[0].lengths()-1):
             passedTime += (1/self.rateOfSamples)
             times.append(passedTime)
 
@@ -190,40 +182,63 @@ class PowerPack:
                 part.plot(times)
 
 
-
-
     
 
 # Here only for an example
 if __name__ == "__main__":
-    power_pack = PowerPack(numberOfSamplesToGather=5, rateOfSamples=5, ohms=0.003)
-    lineMatrix = [[
-    "cDAQ1Mod4/ai0",
-    "cDAQ1Mod4/ai3"
-    ],
-    [],
-    []
-    ]
-    lineMat = [[],["cDAQ1Mod6/ai0"],[]]
-    power_pack.initializePart("gpu", lineMatrix)
-    power_pack.initializePart("motherboard", lineMat)
+    power_pack = PowerPack(numberOfSamplesToGather=6250, rateOfSamples=62500, ohms=0.003)
 
+    motherboard = [
+        ["cDAQ1Mod8/ai0","cDAQ1Mod8/ai1","cDAQ1Mod8/ai2","cDAQ1Mod8/ai3"],
+        ["cDAQ1Mod6/ai0", "cDAQ1Mod6/ai1", "cDAQ1Mod6/ai2", "cDAQ1Mod6/ai3", "cDAQ1Mod6/ai4"],
+        ["cDAQ1Mod2/ai17", "cDAQ1Mod2/ai18", "cDAQ1Mod2/ai19"]
+    ]
+
+    gpu = [
+        [],
+        [],
+        ["cDAQ1Mod2/ai0","cDAQ1Mod2/ai1","cDAQ1Mod2/ai2"]
+    ]
+
+    cpu = [
+        [],
+        [],
+        ["cDAQ1Mod2/ai4","cDAQ1Mod2/ai5","cDAQ1Mod2/ai6", "cDAQ1Mod2/ai7"]
+    ]
+
+    disk = [
+        ["cDAQ1Mod8/ai7"],
+        ["cDAQ1Mod6/ai7"],
+        ["cDAQ1Mod2/ai22"]
+    ]
+
+
+
+    #power_pack.initializePart("motherboard", motherboard)
+    # power_pack.initializePart("disk", disk)
+    power_pack.initializePart("cpu", cpu)
+    
+    start = time.time()
     # Start measurement task
     power_pack.start()
 
     # Simulate running for some time
-    time.sleep(2)
+    time.sleep(3)
 
     # Stop measurement task
     power_pack.stop()
+    # print(time.time()- start)
+
 
     # Plot information
     power_pack.makeCSVs()
 
+    
+    power_pack.plot()
     # Example of a adding a asymtote that occurs on the 1st second.
     # In this case, it is named cool
-    asymtote = {1:"cool"}
-    power_pack.plot(asymtote)
+    #asymtote = {1:"cool"}
+    #power_pack.plot(asymtote)
 
     print("Main thread exiting")
 

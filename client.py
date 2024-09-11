@@ -5,7 +5,8 @@ import socket
 from datetime import datetime
 import time
 
-SERVER_IP = "127.0.0.1" # refers to your own machine 
+# SERVER_IP = "127.0.0.1" # refers to your own machine 
+SERVER_IP = "172.29.176.187"
 SERVER_PORT = 25565
 
 def reader(file):

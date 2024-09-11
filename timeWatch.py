@@ -16,3 +16,4 @@ times = {2:"Step 1", 3: "step 2"}
 
 with open('output.txt', 'w') as f:
     json.dump(times, f)
+
