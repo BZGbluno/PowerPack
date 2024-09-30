@@ -3,7 +3,6 @@ import signal
 import sys
 import subprocess
 import json
-from datetime import datetime
 import time
 
 def reader(file):
@@ -66,27 +65,25 @@ def start_server(ip, port):
 
             # Running the class
             began = str(time.time())
-            result = subprocess.run(["python3","timeWatch.py", "5"], capture_output=True, text=True)
 
+            # simulate work being done
+            time.sleep(10)
+            
             # Process Finished message being sent
             processComplete = "Process finished"
             ended = str(time.time())
             client_socket.sendall(processComplete.encode('utf-8'))
+            
+            # Array that contains when the work began and ended
+            times = [began, ended]
 
-            #Printing out any errors
-            print("Output:\n", result.stdout)
-            print("Errors:\n", result.stderr)
-
-            with open('./measurements/beganSub.txt', 'a') as f:
-                f.write(f"{began}\n")
-            with open('./measurements/endSub.txt', 'a') as f:
-                f.write(f"{ended}\n")
-
+            # Sending over the information
+            client_socket.sendall(times.encode('utf-8'))
 
             client_socket.close()
 
 
-SERVER_IP = '127.0.0.1' 
+SERVER_IP = "172.29.176.187"
 SERVER_PORT = 25565      
 
 start_server(SERVER_IP, SERVER_PORT)

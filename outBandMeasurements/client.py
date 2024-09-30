@@ -1,4 +1,12 @@
+import os
+import sys
+
+settingUpDaqPath = os.path.abspath("../settingUpDaq")
+if os.path.exists(settingUpDaqPath) and settingUpDaqPath not in sys.path:
+    sys.path.append(settingUpDaqPath)
 from powerMeasurer import PowerPack
+
+
 import socket
 import json
 import socket
@@ -47,19 +55,20 @@ def measure(ip, port, message):
 
         # Recieve response from the server to stop measuring
         stopMeasuring = client_socket.recv(16).decode('utf-8')
+
+        
         if stopMeasuring:
             print("The process has been completed, so stop measuring\n\n")
             ended = str(time.time())
             power_pack.stop()
             print(f"\n\n{stopMeasuring}\n\n")
         
+        machineUnderTestTimes = client_socket.recv(4096).decode('utf-8')
+        
     
-    times = reader('output.txt')
-    with open('./measurements/clientStart.txt', 'a') as f:
-        f.write(f"{began}\n")
-    with open('./measurements/clientEnd.txt', 'a') as f:
-        f.write(f"{ended}\n")
-    return times
+    measuringTimes = [began, ended]
+    measuringTimes.append(machineUnderTestTimes)
+    return measuringTimes
 
 
 # Initilize power pack
@@ -82,6 +91,8 @@ power_pack.initializePart("motherboard", lineMat)
 # start measuring
 times = measure(SERVER_IP, SERVER_PORT, "Anyone there?")
 
+print(times)
+
 # Plot information and make the CSV
-power_pack.makeCSVs()
-power_pack.plot(times)
+# power_pack.makeCSVs()
+# power_pack.plot(times)
