@@ -1,6 +1,7 @@
 from partWeAreMeasuring.partSetUp import Measurements
 import threading
 import time
+import pandas as pd
 
 
 class PowerPack:
@@ -189,27 +190,27 @@ if __name__ == "__main__":
     power_pack = PowerPack(numberOfSamplesToGather=6250, rateOfSamples=62500, ohms=0.003)
 
     motherboard = [
-        ["cDAQ1Mod8/ai0","cDAQ1Mod8/ai1","cDAQ1Mod8/ai2","cDAQ1Mod8/ai3"],
-        ["cDAQ1Mod6/ai0", "cDAQ1Mod6/ai1", "cDAQ1Mod6/ai2", "cDAQ1Mod6/ai3", "cDAQ1Mod6/ai4"],
-        ["cDAQ1Mod2/ai17", "cDAQ1Mod2/ai18", "cDAQ1Mod2/ai19"]
+        ["cDAQ2Mod8/ai0","cDAQ2Mod8/ai1","cDAQ2Mod8/ai2","cDAQ2Mod8/ai3"],
+        ["cDAQ2Mod6/ai0", "cDAQ2Mod6/ai1", "cDAQ2Mod6/ai2", "cDAQ2Mod6/ai3", "cDAQ2Mod6/ai4"],
+        ["cDAQ2Mod2/ai17", "cDAQ2Mod2/ai18", "cDAQ2Mod2/ai19"]
     ]
 
     gpu = [
         [],
         [],
-        ["cDAQ1Mod2/ai0","cDAQ1Mod2/ai1","cDAQ1Mod2/ai2"]
+        ["cDAQ2Mod2/ai0","cDAQ2Mod2/ai1","cDAQ2Mod2/ai2"]
     ]
 
     cpu = [
         [],
         [],
-        ["cDAQ1Mod2/ai4","cDAQ1Mod2/ai5","cDAQ1Mod2/ai6", "cDAQ1Mod2/ai7"]
+        ["cDAQ2Mod2/ai4","cDAQ2Mod2/ai5","cDAQ2Mod2/ai6", "cDAQ2Mod2/ai7"]
     ]
 
     disk = [
-        ["cDAQ1Mod8/ai7"],
-        ["cDAQ1Mod6/ai7"],
-        ["cDAQ1Mod2/ai22"]
+        ["cDAQ2Mod8/ai7"],
+        ["cDAQ2Mod6/ai7"],
+        ["cDAQ2Mod2/ai22"]
     ]
 
 
@@ -232,6 +233,13 @@ if __name__ == "__main__":
 
     # Plot information
     power_pack.makeCSVs()
+
+    added = pd.read_csv('cpuMeasurements.csv')
+    added.data['CPU voltage sum'] = added.data.sum(axis=1)
+    num_rows = len(added)
+    #time is in milliseconds
+    time_between_reads = 1000 / num_rows 
+
 
     
     power_pack.plot()

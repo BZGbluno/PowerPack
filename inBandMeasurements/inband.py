@@ -17,10 +17,10 @@ if os.path.exists(settingUpDaqPath) and settingUpDaqPath not in sys.path:
 from powerMeasurer import PowerPack
 from sklearn.model_selection import TimeSeriesSplit
 
-# run AMDuProf function
-def runProfiler():
-    cmd = './profiler.sh'
-    subprocess.run(cmd)
+
+def runCommunication():
+    os.chdir('./benchmarking/')
+    subprocess.run(['python', 'communicationTest.py'])
 
 
 # Sampling rate
@@ -39,21 +39,17 @@ cpu = [
 Power.initializePart("cpu", cpu)
 
 
-# Start measurement task for poth power pack and profiler
-profiler = Process(target=runProfiler)
+# Start Power Pack
 Power.start()
-profiler.start()
 
+runCommunication()
 
-# match the length of the profiler, so we know for how to measure for
-time.sleep(5)
-
-# terminate the profiler and join the child process for synchronization
-profiler.terminate()
-profiler.join()
 
 # Stop measurement task
 Power.stop()
+
+# change directory back
+os.chdir('../')
 
 # make the CSV
 Power.makeCSVs()
@@ -69,8 +65,6 @@ times = np.arange(0, powerPackDf.shape[0]) / samplingRate
 powerPackDf['Times'] = times
 
 
-# cleaning the information inside main
-df = runner()
 
 # setting up the median window for times, voltage median, and voltage variance
 median_window = pd.DataFrame(columns=['times', 'voltage_median', 'voltage_var'])
@@ -105,9 +99,6 @@ plt.figure()
 # plotting the power pack data
 plt.plot(median_window['times'], median_window['voltage_median'], label='Window median', color = "red")
 
-# plotting the AMDuProf data
-plt.plot(df['time_in_seconds'], df['socket0-package-power'], label="Profiler", color ="blue")
-
 
 
 # Display the plot
@@ -118,7 +109,3 @@ plt.legend()
 plt.grid(True)
 plt.savefig('./graphs/cpu.png')
 plt.show()
-
-
-
-

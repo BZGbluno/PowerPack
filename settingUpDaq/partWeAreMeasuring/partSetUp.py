@@ -155,6 +155,8 @@ class Measurements:
                     # Create a stream reader
                     reader.read_many_sample(data, number_of_samples)
 
+                    #print(data)
+
                     for x in range(number_of_samples):
 
                         
@@ -266,6 +268,10 @@ class Measurements:
         self.data.to_csv(filepath, index=False)
 
 
+
+
+
+
     def plot(self, times, verticalAsymtotes=None):
         '''
         This will turn the data matrix into a graph and save it 
@@ -369,7 +375,6 @@ class Measurements:
         '''
         return len(self.data)
     
-
 
 
 

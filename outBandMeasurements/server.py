@@ -4,6 +4,7 @@ import sys
 import subprocess
 import json
 import time
+import os
 
 def reader(file):
     '''
@@ -58,7 +59,9 @@ def start_server(ip, port):
 
             # Connection established
             print(f"Connection from {client_address} established.")
-            processStarting = "Process Starting"
+
+            # This will send this computer time
+            processStarting = str(time.time())
             
             # Process Starting message being sent
             client_socket.sendall(processStarting.encode('utf-8'))
@@ -66,24 +69,34 @@ def start_server(ip, port):
             # Running the class
             began = str(time.time())
 
-            # simulate work being done
-            time.sleep(10)
+            # Running communication script
+            os.chdir('../inBandMeasurements/benchmarking/')
+            subprocess.run(['python', 'communicationTest.py'])
+            os.chdir('../../outBandMeasurements/')
+
+            # time.sleep(5)
+
+            # time.sleep(20)
             
             # Process Finished message being sent
             processComplete = "Process finished"
             ended = str(time.time())
+            print(processComplete)
             client_socket.sendall(processComplete.encode('utf-8'))
-            
-            # Array that contains when the work began and ended
-            times = [began, ended]
 
-            # Sending over the information
-            client_socket.sendall(times.encode('utf-8'))
+
+            
+            # # Array that contains when the work began and ended
+            # times = [began, ended]
+            # data = json.dumps(times)
+
+            # # Sending over the information
+            # client_socket.sendall(data.encode('utf-8'))
 
             client_socket.close()
 
 
-SERVER_IP = "172.29.176.187"
+SERVER_IP = "172.29.119.214"
 SERVER_PORT = 25565      
 
 start_server(SERVER_IP, SERVER_PORT)
