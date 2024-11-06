@@ -166,15 +166,18 @@ class PowerPack:
         This plot function also takes in a dictionary that has time stamps as keys
         and the name of section you are covering as the value
         '''
-        #print(self.registeredParts[0].lengths())
-        times = []
-        passedTime = 0
-        times.append(passedTime)
-        for _ in range(0, self.registeredParts[0].lengths()-1):
-            passedTime += (1/self.rateOfSamples)
-            times.append(passedTime)
+        # #print(self.registeredParts[0].lengths())
+        # times = []
+        # passedTime = 0
+        # times.append(passedTime)
+        # for _ in range(0, self.registeredParts[0].lengths()-1):
+        #     passedTime += (1/self.rateOfSamples)
+        #     times.append(passedTime)
+        length = self.registeredParts[0].lengths() - 1
+        rate_of_samples = self.rateOfSamples
 
-        print(times)
+        times = np.arange(length + 1) / rate_of_samples
+
 
         for part in self.registeredParts:
             if verticalAsymtotes:

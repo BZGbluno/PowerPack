@@ -227,11 +227,7 @@ class Measurements:
         for index, x in enumerate(self.times):
             self.times[index] = self.times[index] - initialTime
 
-
-
-        print(self.times)
     
-            
         
 
 
@@ -273,6 +269,7 @@ class Measurements:
 
 
     def plot(self, times, verticalAsymtotes=None):
+        
         '''
         This will turn the data matrix into a graph and save it 
         a directoy named graph.
@@ -282,20 +279,25 @@ class Measurements:
         voltageAmounts = []
 
         self.data['voltage sum'] = self.data.sum(axis=1)
+        # print(self.data)
         
         
         for volt in self.data["voltage sum"]:
             voltageAmounts.append(volt)
 
 
-        print(len(times))
-        print(len(voltageAmounts))
+        # print(len(times))
+        # print(len(voltageAmounts))
+
 
         self._tempPlot(times, self.name, voltageAmounts, verticalAsymtotes)   
 
         
 
         #self._plotGraphs(times, dataWithNoChannelInfo, self.name, voltageAmounts, verticalAsymtotes)
+    
+
+
 
 
     
@@ -306,64 +308,75 @@ class Measurements:
         plotting. It will also add vertical Asymtote to the graph if they exist
         '''
 
+
+
         plt.rcParams["figure.figsize"] = (16,6)
         plt.rcParams['figure.dpi'] = 200
         
         plt.figure()
 
         if verticalAsymtotes:
-            for asymtote in verticalAsymtotes:
-                plt.axvline(x=float(asymtote), color='r', linestyle='--', label=f'{verticalAsymtotes[asymtote]}')
+            for asymptote in verticalAsymtotes:
+
+                # rounded = str(round(asymptote[0]))
+                # plt.axvline(x=float(asymptote), color='b', label=f'Start time, ')
+
+                rounded_asymptote = round(asymptote, 2)  # Round to 2 decimal places
+                plt.axvline(x=float(asymptote), color='b', label=f'Start time: {rounded_asymptote:.2f}')
 
         # for index, line in enumerate(lines):
-        #     #plt.plot(time, line, label=f'{voltageAmount[index]} line', lw=0.5)
+        #     plt.plot(time, line, label=f'{voltageAmount[index]} line', lw=0.5)
         #     plt.scatter(time, line, label=f'{voltageAmount[index]} line', s=2)#, lw=2)
 
-        #plt.plot(time, voltageAmount, lw=0.5, label="cpu")
         
-        plt.scatter(time, voltageAmount, label='line', s=2)
+        
+        df = pd.DataFrame({
+            'voltage': voltageAmount,
+            'times': time
+        })
 
+        # setting up the median window for times, voltage median, and voltage variance
+        median_window = pd.DataFrame(columns=['times', 'voltage_median', 'voltage_var'])
+
+        # Parameters, the loss is (window size + 1)
+        window_size = 100
+        voltage_sum = df['voltage'].values
+        times = df['times'].values
+
+
+
+        last_time = round(df['times'].iloc[-1])
+        increment = last_time / 20
+        print(last_time)
+
+
+
+        # Create sliding windows using the strided trick
+        voltage_windows = np.lib.stride_tricks.sliding_window_view(voltage_sum, window_shape=window_size)
+        time_windows = np.lib.stride_tricks.sliding_window_view(times, window_shape=window_size)
+
+        # Compute medians and variances for all windows at once
+        voltage_medians = np.median(voltage_windows, axis=1)
+
+        # Use the last time in each window for timing
+        reference_times = time_windows[:, -1]
+
+        # Create the DataFrame with the computed values
+        median_window = pd.DataFrame({
+            'times': reference_times,
+            'voltage_median': voltage_medians
+        })
+        
+        plt.plot(median_window['times'], median_window['voltage_median'], label=f'Window median {name}', color = "red")
+
+        # plt.scatter(time, voltageAmount, label='line', s=2)
         plt.xlabel('Time in sec')
-        plt.ylabel('Watts')
+        plt.ylabel('A, Watts')
         plt.title(f'{name} Power Consumption Graph')
         plt.legend()
         plt.grid(True)
         ax = plt.gca()
-        ax.xaxis.set_major_locator(ticker.MultipleLocator(base=0.5))
-        plt.savefig(f'./graphs/{name}.svg')
-        plt.savefig(f'./graphs/{name}.png')
-        plt.show
-
-
-    def _plotGraphs(self, time, lines, name, voltageAmount, verticalAsymtotes=None):
-        '''
-        This will plot the different lines which are arrays as the y-axis and
-        the x-axis is the time array. This is a private method to help with
-        plotting. It will also add vertical Asymtote to the graph if they exist
-        '''
-
-        plt.rcParams["figure.figsize"] = (16,6)
-        plt.rcParams['figure.dpi'] = 200
-        
-        plt.figure()
-
-        if verticalAsymtotes:
-            for asymtote in verticalAsymtotes:
-                plt.axvline(x=float(asymtote), color='r', linestyle='--', label=f'{verticalAsymtotes[asymtote]}')
-
-        for index, line in enumerate(lines):
-            #plt.plot(time, line, label=f'{voltageAmount[index]} line', lw=0.5)
-            plt.scatter(time, line, label=f'{voltageAmount[index]} line', s=2)#, lw=2)
-
-        plt.plot
-
-        plt.xlabel('Time in sec')
-        plt.ylabel('Watts')
-        plt.title(f'{name} Power Consumption Graph')
-        plt.legend()
-        plt.grid(True)
-        ax = plt.gca()
-        ax.xaxis.set_major_locator(ticker.MultipleLocator(base=0.5))
+        ax.xaxis.set_major_locator(ticker.MultipleLocator(base=increment))
         plt.savefig(f'./graphs/{name}.svg')
         plt.savefig(f'./graphs/{name}.png')
         plt.show
