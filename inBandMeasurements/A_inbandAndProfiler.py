@@ -47,7 +47,7 @@ else: #CHANGE NAMES OF THE ARRAY VALUES
     gpu = [
         [],
         [],
-        ["cDAQ2Mod2/ai4","cDAQ2Mod2/ai5","cDAQ2Mod2/ai6", "cDAQ2Mod2/ai7"]
+        ["cDAQ2Mod2/ai0","cDAQ2Mod2/ai1","cDAQ2Mod2/ai2", "cDAQ2Mod2/ai3"]
         ]
     Power.initializePart("gpu", gpu)
 
@@ -63,6 +63,8 @@ if (type == 'cpu'):
     subprocess.run(['python', 'communicationTest.py'])
 else: #if (type == 'gpu')
     subprocess.run(['python', 'gputest.py']) #INSERT THE name of the script to run the gpu testos.chdir('../')
+
+os.chdir('../')
 
 # terminate the profiler and join the child process for synchronization
 profiler.terminate()
@@ -146,7 +148,7 @@ plt.legend()
 plt.grid(True)
 if (type == 'cpu'): 
     plt.title('Power Consumption of CPU Over Time')
-    plt.savefig('./graphs/cpu.png')
+    plt.savefig('./graphs/both.png')
 else: #if (type == 'gpu')
     plt.title('Power Consumption of GPU Over Time')
     plt.savefig('./graphs/gpu.png')

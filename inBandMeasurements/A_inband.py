@@ -49,7 +49,7 @@ else: #CHANGE NAMES OF THE ARRAY VALUES
     gpu = [
         [],
         [],
-        ["cDAQ2Mod2/ai4","cDAQ2Mod2/ai5","cDAQ2Mod2/ai6", "cDAQ2Mod2/ai7"]
+        ["cDAQ2Mod2/ai0","cDAQ2Mod2/ai1","cDAQ2Mod2/ai2", "cDAQ2Mod2/ai3"]
         ]
     Power.initializePart("gpu", gpu)
 
@@ -124,11 +124,12 @@ plt.plot(median_window['times'], median_window['voltage_median'], label='Window 
 # Display the plot
 plt.xlabel('Time (seconds)')
 plt.ylabel('Power Consumption (Watts)')
+plt.ylim(0,85)
 plt.legend()
 plt.grid(True)
 if (type == 'cpu'): 
     plt.title('Power Consumption of CPU Over Time')
-    plt.savefig('./graphs/cpu.png')
+    plt.savefig('./graphs/inband_cpu.png')
 else: #if (type == 'gpu')
     plt.title('Power Consumption of GPU Over Time')
     plt.savefig('./graphs/gpu.png')
