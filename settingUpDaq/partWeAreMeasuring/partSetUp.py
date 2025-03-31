@@ -1,4 +1,4 @@
-from partWeAreMeasuring.constants import Voltages
+# from partWeAreMeasuring.constants import Voltages
 import nidaqmx
 from nidaqmx.constants import TerminalConfiguration
 from nidaqmx.stream_readers import AnalogMultiChannelReader
@@ -7,7 +7,11 @@ import numpy as np
 import matplotlib.pyplot as plt
 import matplotlib.ticker as ticker
 import pandas as pd
+import threading
+from collections import defaultdict
+import os
 
+daq_lock = threading.Lock()
 
 class Measurements:
     '''
@@ -72,42 +76,62 @@ class Measurements:
         self.rateOfSamples = rateOfSamples
         self.ohms = ohms
         self.name = name
-        self.threeVoltsSamples = {}
-        self.fiveVoltsSamples = {}
-        self.twelveVoltsSamples = {}
         self.totalLines = 0
-        self.data = []
+        self.data = {}
         self.times = []
 
-        # 3.3 Volt Lines is row 0
-        self._setLineNames(linesNamesMatrix, 0)
 
-        # 5 Volt Lines is row 1
-        self._setLineNames(linesNamesMatrix, 1)
 
-        # 12 Volt Lines is row 2
-        self._setLineNames(linesNamesMatrix, 2)
+        self.parts = linesNamesMatrix
+        self.channelOrder = []
+        self.channelVoltageMap = {}
+        self.channelSamples = {}
+        self.partCount = 0
+
+        
+        self._setLineNames(linesNamesMatrix)
 
     
-    def _setLineNames(self, linesNamesMatrix, row):
+    def _setLineNames(self, linesNamesMatrix):
         '''
         This is a private method that will create a sample array for the available channels
         '''
         totalLine = 0
-        for names in linesNamesMatrix[row]:
-            channelName = f"{names}"
-            samples = []
-            if row == 0:
-                self.threeVoltsSamples[channelName] = samples
-            elif row == 1:
-                self.fiveVoltsSamples[channelName] = samples
-            else:
-                self.twelveVoltsSamples[channelName] = samples
 
+        for part in linesNamesMatrix.keys():
 
-            totalLine += 1
+            for index, row in enumerate(linesNamesMatrix[part]):
+
+                for channel in row:
+
+                    voltage = 0
+                    if index == 0:
+                        voltage = 3.3
+                    
+                    
+                    elif index == 1:
+                        voltage = 5
+
+                    elif index == 2:
+                        voltage = 12
+                    
+                    
+                    self.channelVoltageMap[channel] = [voltage, part]
+                    self.channelSamples[channel] = []
+                    totalLine += 1
+            self.partCount += 1
+
         self.totalLines += totalLine
     
+
+    def getChannelVoltMap(self):
+        return self.channelVoltageMap
+    
+    def getTotalLines(self):
+        return self.totalLines
+    
+    def getChannelSamples(self):
+        return self.channelSamples
 
     def getName(self):
         '''
@@ -121,18 +145,14 @@ class Measurements:
         Creates and runs the task while saving all the data. Task ends once stop event is triggered
         '''
         try:
+
             task = nidaqmx.Task(f"Measure {self.name} consumption")
 
-            # Channels added for 3.3V measurements
-            for key in self.threeVoltsSamples.keys():
-                task.ai_channels.add_ai_voltage_chan(f"{key}", terminal_config=TerminalConfiguration.DIFF)
 
-            # Channels added for 5V measurements
-            for key in self.fiveVoltsSamples.keys():
-                task.ai_channels.add_ai_voltage_chan(f"{key}", terminal_config=TerminalConfiguration.DIFF)
-
-            # Channels added for 12V measurements
-            for key in self.twelveVoltsSamples.keys():
+            for key in self.channelVoltageMap.keys():
+                # add in order here
+                
+                self.channelOrder.append(key)
                 task.ai_channels.add_ai_voltage_chan(f"{key}", terminal_config=TerminalConfiguration.DIFF)
 
             # Setting up the sampling rates
@@ -142,6 +162,7 @@ class Measurements:
                 samps_per_chan=self.numOfSamples
             )
             reader = AnalogMultiChannelReader(task.in_stream)
+
 
             # Define a callback function, it is here because task will go out of scope if placed outside
             # the number of samples is used for a callback function to read out the samples
@@ -155,41 +176,20 @@ class Measurements:
                     # Create a stream reader
                     reader.read_many_sample(data, number_of_samples)
 
-                    #print(data)
 
                     for x in range(number_of_samples):
 
                         
                         
-                        # 3.3 volt
-                        index = 0
-                        for key in self.threeVoltsSamples.keys():
-                            #print(data)
-                            self.threeVoltsSamples[key].append(abs((Voltages.THREEVOLTS.value * (data[index][x])/self.ohms)))
-                            #self.threeVoltsSamples[key].append(abs((data[index][x])))
-                            #print(data[index][x])
-                            index += 1
-                            #print(self.threeVoltsSamples)
-
-                        # 5 volts
-                        index = 0
-                        for key in self.fiveVoltsSamples.keys():
-                            self.fiveVoltsSamples[key].append(abs((Voltages.FIVEVOLTS.value * (data[index][x])/self.ohms)))
-                            #self.fiveVoltsSamples[key].append(abs((data[index][x])))
-                            index += 1
-                        
-                        # 12 volts
-                        index = 0
-                        for key in self.twelveVoltsSamples.keys():
-                            self.twelveVoltsSamples[key].append(abs((Voltages.TWELVEVOLTS.value * (data[index][x])/self.ohms)))
-                            #self.twelveVoltsSamples[key].append(abs((data[index][x])))
-                            index += 1
-                        
+                        for row in range(0, self.totalLines):
 
 
-                    # Process the data
-                    # print(f"Data shape: {data.shape}")
-                    # print(f"Data: {data}")
+                            data[row] = np.clip(data[row], -1e10, 1e10)  # Prevent overflow
+
+                            ohm = 0.003  # Explicitly using float64 to avoid precision issues
+                            voltage = int((self.channelVoltageMap[self.channelOrder[row]])[0])
+                            # Append the processed data
+                            self.channelSamples[self.channelOrder[row]].append(abs((data[row]/ohm)*voltage))                   
                     
                     return 0
                 except nidaqmx.errors.DaqError as e:
@@ -217,10 +217,13 @@ class Measurements:
         finally:
             # Clean up the task
             if 'task' in locals() and task is not None:
+                task.stop()
                 task.close()
 
-                # self._fixTime()
+                # # self._fixTime()
+                # print(self.channelSamples)
                 self._fillData()
+
 
     def _fixTime(self):
         initialTime = self.times[0]
@@ -237,21 +240,37 @@ class Measurements:
         and the columns are the different samples gathered with the first 2 columns being the channel
         name and volt readings respectively
         '''
-        df = pd.DataFrame()
 
-        # this will get the column names
-        for key in self.threeVoltsSamples:
-            df[f"{key} with 3.3 Volts"] = pd.Series(self.threeVoltsSamples[key])
+        mixedName = ""
+        # making graph for individual parts
+        for part in self.parts.keys():
+            mixedName = str(part) + mixedName
+            df = pd.DataFrame()
+
+            for channels in self.channelOrder:
+                
+                if part == self.channelVoltageMap[channels][1]:
 
 
-        for key in self.fiveVoltsSamples:
-            df[f"{key} with 5 Volts"] = pd.Series(self.fiveVoltsSamples[key])
+                    voltage = self.channelVoltageMap[channels][0]
+                    df[f"{channels} with {voltage} Volts"] = pd.Series(self.channelSamples[channels])
+            
+            self.data[part] = df
 
 
-        for key in self.twelveVoltsSamples:
-            df[f"{key} with 12 Volts"] = pd.Series(self.twelveVoltsSamples[key])
+        if (self.partCount > 1):
+            
+            # dataset for combined parts
+            df1 = pd.DataFrame()
+            for channels in self.channelOrder:
 
-        self.data = df
+                voltage = self.channelVoltageMap[channels][0]
+                df1[f"{part} using {channels} with {voltage} Volts"] = pd.Series(self.channelSamples[channels])
+            
+            self.data[mixedName] = df1
+
+
+
 
     
     def makeCSV(self):
@@ -260,8 +279,17 @@ class Measurements:
         a directory named CSV
         '''
 
-        filepath = f'./csv/{self.name}Measurements.csv'
-        self.data.to_csv(filepath, index=False)
+
+        if not os.path.exists("./csv"):
+            os.makedirs("./csv")
+        for datasets in self.data.keys():
+
+            print(datasets)
+
+            self.data[datasets] = self.data[datasets].dropna()
+
+            filepath = f'./csv/{datasets}Measurements.csv'
+            self.data[datasets].to_csv(filepath, index=False)
 
 
 
