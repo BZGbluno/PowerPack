@@ -22,6 +22,10 @@ def runProfiler():
     cmd = './profiler.sh'
     subprocess.run(cmd)
 
+# run the Nvidia function
+def runGPUProfiler():
+    cmd = './GPUprofiler.sh'
+    subprocess.run(cmd)
 
 
 # Sampling rate
@@ -35,6 +39,13 @@ cpu = [
         [],
         ["cDAQ2Mod2/ai4","cDAQ2Mod2/ai5","cDAQ2Mod2/ai6", "cDAQ2Mod2/ai7"]
     ]
+
+
+gpu = [
+    [],
+    [],
+    ["cDAQ2Mod2/ai0","cDAQ2Mod2/ai1","cDAQ2Mod2/ai2", "cDAQ2Mod2/ai3"]
+]
 
 # Initialize the part
 Power.initializePart("cpu", cpu)
@@ -78,7 +89,7 @@ print(os.getcwd())
 median_window = pd.DataFrame(columns=['times', 'voltage_median', 'voltage_var'])
 
 # Parameters, the loss is (window size + 1)
-window_size = 100
+window_size = 250
 voltage_sum = powerPackDf['voltage sum'].values
 times = powerPackDf['Times'].values
 
@@ -118,7 +129,7 @@ plt.plot(df['time_in_seconds'], df['socket0-package-power'], label="Profiler", c
 plt.xlabel('Time (seconds)')
 plt.ylabel('Power Consumption (Watts)')
 plt.title('Power Consumption of CPU Over Time')
-plt.ylim(0,100)
+#plt.ylim(0,100)
 plt.legend()
 plt.grid(True)
 plt.savefig('./graphs/cpu.png')

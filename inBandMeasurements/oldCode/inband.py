@@ -25,7 +25,7 @@ def runCommunication():
 
 # Sampling rate
 samplingRate = 50000
-Power = PowerPack(numberOfSamplesToGather=2000, rateOfSamples=samplingRate, ohms=0.003)
+Power = PowerPack(numberOfSamplesToGather=2000, rateOfSamples=samplingRate, ohms=0.05)
 
 
 # We are only interested in the CPU currently
@@ -35,19 +35,27 @@ cpu = [
         ["cDAQ2Mod2/ai4","cDAQ2Mod2/ai5","cDAQ2Mod2/ai6", "cDAQ2Mod2/ai7"]
     ]
 
+
+gpu = [
+    [],
+    [],
+    ["cDAQ2Mod2/ai0","cDAQ2Mod2/ai1","cDAQ2Mod2/ai2", "cDAQ2Mod2/ai3"]
+]
+
 # Initialize the part
-Power.initializePart("cpu", cpu)
+Power.initializePart("cpu", gpu)
 
 
 # Start Power Pack
 Power.start()
-
+timeStart = time.time()
 runCommunication()
 
 
 # Stop measurement task
 Power.stop()
-
+totalTime = time.time() - timeStart
+print(f'Total Test Time: {totalTime}')
 # change directory back
 os.chdir('../')
 
@@ -106,6 +114,7 @@ plt.xlabel('Time (seconds)')
 plt.ylabel('Power Consumption (Watts)')
 plt.title('Power Consumption of CPU Over Time')
 plt.legend()
+plt.ylim(0,200)
 plt.grid(True)
 plt.savefig('./graphs/cpu.png')
 plt.show()

@@ -11,7 +11,7 @@ time.sleep(5)
 for _ in range(0,2):
 
     # Start the process in the background
-    process = subprocess.Popen(['./cpuburn'], stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+    process = subprocess.Popen(['./matrixMul', '-wA=4096', '-wB=4096', '-hA=4096', '-hB=4096'], stdout=subprocess.PIPE, stderr=subprocess.PIPE)
 
     # Get the PID of the process
     print(f"Process ID (PID): {process.pid}")

@@ -1,0 +1,111 @@
+
+gpu = [
+        [],
+        [],
+        ["cDAQ2Mod2/ai0","cDAQ2Mod2/ai1","cDAQ2Mod2/ai2", "cDAQ2Mod2/ai3"]
+    ]
+
+
+
+// Part will be organized using dictionaries that will contain the parts
+
+Each row corresponds to a channel in the task. Each column
+corresponds to a sample from each channel. The order of the
+channels in the array corresponds to the order in which you
+add the channels to the task or to the order of the channels 
+you specify with the “channels_to_read” property.
+
+
+parts = {
+
+
+    gpu: [
+        [],
+        [],
+        ["cDAQ2Mod2/ai0","cDAQ2Mod2/ai1","cDAQ2Mod2/ai2", "cDAQ2Mod2/ai3"]
+    ],
+
+    disk : [
+        ["cDAQ2Mod8/ai7"],
+        ["cDAQ2Mod6/ai7"],
+        ["cDAQ2Mod2/ai22"]
+    ]
+
+
+}
+
+
+// Add a channel to each part, the order in which they are added is the order in which information is recieved
+ChannelOrder= [
+
+    ["cDAQ2Mod2/ai0"],
+    ["cDAQ2Mod2/ai1"],
+    ["cDAQ2Mod2/ai2"],
+    ["cDAQ2Mod2/ai3"],
+    ["cDAQ2Mod8/ai7],
+    ["cDAQ2Mod6/ai7"],
+    ["cDAQ2Mod2/ai22]
+]
+
+ChannelVoltageMap = {
+    "cDAQ2Mod2/ai0": [12, gpu]
+    "cDAQ2Mod2/ai1": 12, gpu
+    "cDAQ2Mod2/ai2": 12, gpu
+    "cDAQ2Mod2/ai3": 12, gpu
+    "cDAQ2Mod8/ai7": 3, disk
+    "cDAQ2Mod6/ai7": 5, disk
+    "cDAQ2Mod2/ai22": 12 disk
+}
+
+
+ChannelSamples = {
+    "cDAQ2Mod2/ai0": []
+    "cDAQ2Mod2/ai1": []
+    "cDAQ2Mod2/ai2": []
+    "cDAQ2Mod2/ai3": []
+    "cDAQ2Mod8/ai7": []
+    "cDAQ2Mod6/ai7": []
+    "cDAQ2Mod2/ai22": []
+}
+
+
+
+// This will be the organization for measurement class
+for row in range(totalLines):
+
+    voltage = ChannelVoltageMap[ChannelOrder[row]]
+    ohm = 0.003
+
+    data[row] /= ohm
+    data[row] *= int(voltage)
+
+    ChannelSamples[ChannelOrder[row]].append(data[row])
+
+
+
+    
+// Building the dataset
+
+gpuDf = [
+    Channel 1, Channel 2, Channel3, Channel4
+    0.5      , 0.5      , 0.5,    , 0.5
+]
+
+
+
+
+gpuDf = [
+    Channel 1, Channel 2, Channel3, Channel4
+    0.5      , 0.5      , 0.5,    , 0.5
+]
+
+
+diskDf = [
+    Channel 1, Channel 2, Channel3
+    0.5      , 0.5      , 0.5,   
+]
+
+CombinedDf [
+    Channel 1, Channel 2, Channel3, Channel4, Channel 1, Channel 2, Channel3
+    0.5      , 0.5      , 0.5,    , 0.5     , 0.5      , 0.5,     , 0.5
+]

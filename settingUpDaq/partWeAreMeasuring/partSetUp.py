@@ -10,6 +10,7 @@ import pandas as pd
 import threading
 from collections import defaultdict
 import os
+from datetime import datetime
 
 daq_lock = threading.Lock()
 
@@ -122,6 +123,7 @@ class Measurements:
             self.partCount += 1
 
         self.totalLines += totalLine
+
     
 
     def getChannelVoltMap(self):
@@ -177,19 +179,16 @@ class Measurements:
                     reader.read_many_sample(data, number_of_samples)
 
 
-                    for x in range(number_of_samples):
-
                         
-                        
-                        for row in range(0, self.totalLines):
+                    for row in range(0, self.totalLines):
+
+                        data[row] = np.clip(data[row], -1e10, 1e10)  # Prevent overflow
+                        voltage = int((self.channelVoltageMap[self.channelOrder[row]])[0])
+                        # Append the processed data
+                        self.channelSamples[self.channelOrder[row]] = np.concatenate((self.channelSamples[self.channelOrder[row]] , abs((data[row]/self.ohms)*voltage)))
+                        # self.channelSamples[self.channelOrder[row]] = np.concatenate((self.channelSamples[self.channelOrder[row]] , abs((data[row]))))
 
 
-                            data[row] = np.clip(data[row], -1e10, 1e10)  # Prevent overflow
-
-                            ohm = 0.003  # Explicitly using float64 to avoid precision issues
-                            voltage = int((self.channelVoltageMap[self.channelOrder[row]])[0])
-                            # Append the processed data
-                            self.channelSamples[self.channelOrder[row]].append(abs((data[row]/ohm)*voltage))                   
                     
                     return 0
                 except nidaqmx.errors.DaqError as e:
@@ -247,15 +246,28 @@ class Measurements:
             mixedName = str(part) + mixedName
             df = pd.DataFrame()
 
+            
+            # Find the smallest sample within the channels
+            smallestArr = []
+            for channels in self.channelOrder:
+                
+                if part == self.channelVoltageMap[channels][1]:
+                    smallestArr.append(len(self.channelSamples[channels]))
+
+            smallest = min(smallestArr)
+            print(f'The smallest: {smallest}')
+
             for channels in self.channelOrder:
                 
                 if part == self.channelVoltageMap[channels][1]:
 
-
                     voltage = self.channelVoltageMap[channels][0]
-                    df[f"{channels} with {voltage} Volts"] = pd.Series(self.channelSamples[channels])
+                    df[f"{channels} with {voltage} Volts"] = self.channelSamples[channels][0:smallest]
             
+
             self.data[part] = df
+        
+        self.length = len(self.data[part])
 
 
         if (self.partCount > 1):
@@ -265,10 +277,9 @@ class Measurements:
             for channels in self.channelOrder:
 
                 voltage = self.channelVoltageMap[channels][0]
-                df1[f"{part} using {channels} with {voltage} Volts"] = pd.Series(self.channelSamples[channels])
+                df1[f"{self.channelVoltageMap[channels][1]} using {channels} with {voltage} Volts"] = pd.Series(self.channelSamples[channels])
             
             self.data[mixedName] = df1
-
 
 
 
@@ -278,7 +289,6 @@ class Measurements:
         This will turn the data matrix into a CSV and save it to
         a directory named CSV
         '''
-
 
         if not os.path.exists("./csv"):
             os.makedirs("./csv")
@@ -295,37 +305,33 @@ class Measurements:
 
 
 
-
-    def plot(self, times, verticalAsymtotes=None):
+    def plot(self, times, partToPlot, verticalAsymtotes=None):
         
         '''
         This will turn the data matrix into a graph and save it 
         a directoy named graph.
         '''
 
-        dataWithNoChannelInfo = []
-        voltageAmounts = []
 
-        self.data['voltage sum'] = self.data.sum(axis=1)
+        self.data[f'{partToPlot}']['voltage sum'] = self.data[f'{partToPlot}'].sum(axis=1)
+
+        print("here")
         # print(self.data)
         
-        
-        for volt in self.data["voltage sum"]:
+        # voltageAmounts = self.data[f'{partToPlot}']['voltage sum'] 
+        voltageAmounts = []
+
+        for volt in self.data[f'{partToPlot}']['voltage sum']:
             voltageAmounts.append(volt)
 
 
-        # print(len(times))
-        # print(len(voltageAmounts))
+        print(len(times))
+        print(len(voltageAmounts))
 
 
-        self._tempPlot(times, self.name, voltageAmounts, verticalAsymtotes)   
+        self._tempPlot(times, partToPlot, voltageAmounts, verticalAsymtotes)   
 
-        
-
-        #self._plotGraphs(times, dataWithNoChannelInfo, self.name, voltageAmounts, verticalAsymtotes)
-    
-
-
+            
 
 
     
@@ -352,12 +358,7 @@ class Measurements:
                 rounded_asymptote = round(asymptote, 2)  # Round to 2 decimal places
                 plt.axvline(x=float(asymptote), color='b', label=f'Start time: {rounded_asymptote:.2f}')
 
-        # for index, line in enumerate(lines):
-        #     plt.plot(time, line, label=f'{voltageAmount[index]} line', lw=0.5)
-        #     plt.scatter(time, line, label=f'{voltageAmount[index]} line', s=2)#, lw=2)
 
-        
-        
         df = pd.DataFrame({
             'voltage': voltageAmount,
             'times': time
@@ -373,17 +374,14 @@ class Measurements:
 
 
 
-        last_time = round(df['times'].iloc[-1])
-        increment = last_time / 20
-        print(last_time)
-
 
 
         # Create sliding windows using the strided trick
         voltage_windows = np.lib.stride_tricks.sliding_window_view(voltage_sum, window_shape=window_size)
         time_windows = np.lib.stride_tricks.sliding_window_view(times, window_shape=window_size)
 
-        # Compute medians and variances for all windows at once
+        
+        # Compute medians for all windows at once
         voltage_medians = np.median(voltage_windows, axis=1)
 
         # Use the last time in each window for timing
@@ -395,18 +393,21 @@ class Measurements:
             'voltage_median': voltage_medians
         })
         
-        plt.plot(median_window['times'], median_window['voltage_median'], label=f'Window median {name}', color = "red")
+        plt.plot(median_window['times'], median_window['voltage_median'], label=f'PowerPack Measurements: {name}', color = "red")
 
-        # plt.scatter(time, voltageAmount, label='line', s=2)
         plt.xlabel('Time in sec')
         plt.ylabel('A, Watts')
         plt.title(f'{name} Power Consumption Graph')
         plt.legend()
         plt.grid(True)
         ax = plt.gca()
-        ax.xaxis.set_major_locator(ticker.MultipleLocator(base=increment))
-        plt.savefig(f'./graphs/{name}.svg')
-        plt.savefig(f'./graphs/{name}.png')
+        # ax.xaxis.set_major_locator(ticker.MultipleLocator(base=increment))
+
+
+        now = datetime.now()
+        date_str = now.strftime("%Y-%m-%d %H:%M:%S")
+        #plt.savefig(f'./graphs/{name}{date_str}.svg')
+        plt.savefig(f'./graphs/{name}{date_str}.png')
         plt.show
 
 
@@ -414,7 +415,7 @@ class Measurements:
         '''
         This will return the amount of samples gathered by a channel
         '''
-        return len(self.data)
+        return self.length
     
 
 
