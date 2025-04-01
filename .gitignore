@@ -3,3 +3,4 @@ myvenv/
 **/*.csv
 useless/
 **/*.svg
+nvidia-bug-report.log
