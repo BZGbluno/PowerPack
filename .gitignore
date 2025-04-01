@@ -1,6 +1,5 @@
-inBandMeasurements/__pycache__/
+__pycache__/
 myvenv/
-settingUpDaq/partWeAreMeasuring/__pycache__/
 **/*.csv
 useless/
 **/*.svg
