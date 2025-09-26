@@ -1,4 +1,3 @@
-# from partWeAreMeasuring.constants import Voltages
 import nidaqmx
 from nidaqmx.constants import TerminalConfiguration
 from nidaqmx.stream_readers import AnalogMultiChannelReader
@@ -8,11 +7,9 @@ import matplotlib.pyplot as plt
 import matplotlib.ticker as ticker
 import pandas as pd
 import threading
-from collections import defaultdict
 import os
 from datetime import datetime
 
-daq_lock = threading.Lock()
 
 class Measurements:
     '''
@@ -26,7 +23,7 @@ class Measurements:
         
         Convention:
             [
-                [3volts],\n
+                [3.3volts],\n
                 [5volts],\n
                 [12volts],          
             ]
@@ -255,7 +252,6 @@ class Measurements:
                     smallestArr.append(len(self.channelSamples[channels]))
 
             smallest = min(smallestArr)
-            print(f'The smallest: {smallest}')
 
             for channels in self.channelOrder:
                 
@@ -294,8 +290,6 @@ class Measurements:
             os.makedirs("./csv")
         for datasets in self.data.keys():
 
-            print(datasets)
-
             self.data[datasets] = self.data[datasets].dropna()
 
             filepath = f'./csv/{datasets}Measurements.csv'
@@ -305,59 +299,57 @@ class Measurements:
 
 
 
-    def plot(self, times, partToPlot, verticalAsymtotes=None):
+    def plot(self, times, partToPlot, powerCap, verticalAsymtotes=None, pattern=None):
         
         '''
         This will turn the data matrix into a graph and save it 
         a directoy named graph.
         '''
-
-
         self.data[f'{partToPlot}']['voltage sum'] = self.data[f'{partToPlot}'].sum(axis=1)
 
-        print("here")
-        # print(self.data)
-        
-        # voltageAmounts = self.data[f'{partToPlot}']['voltage sum'] 
         voltageAmounts = []
 
         for volt in self.data[f'{partToPlot}']['voltage sum']:
             voltageAmounts.append(volt)
 
 
-        print(len(times))
-        print(len(voltageAmounts))
-
-
-        self._tempPlot(times, partToPlot, voltageAmounts, verticalAsymtotes)   
+        self._tempPlot(times, partToPlot, powerCap, voltageAmounts, verticalAsymtotes, pattern)   
 
             
 
 
     
-    def _tempPlot(self, time, name, voltageAmount, verticalAsymtotes=None):
+    def _tempPlot(self, time, name, powerCap, voltageAmount, verticalAsymtotes=None, pattern=None):
         '''
         This will plot the different lines which are arrays as the y-axis and
         the x-axis is the time array. This is a private method to help with
         plotting. It will also add vertical Asymtote to the graph if they exist
         '''
 
-
-
         plt.rcParams["figure.figsize"] = (16,6)
-        plt.rcParams['figure.dpi'] = 200
+        plt.rcParams['figure.dpi'] = 300
         
         plt.figure()
 
         if verticalAsymtotes:
+            count = 0
+
             for asymptote in verticalAsymtotes:
+
+                calculateColor = count % pattern
+                count+=1
 
                 # rounded = str(round(asymptote[0]))
                 # plt.axvline(x=float(asymptote), color='b', label=f'Start time, ')
 
-                rounded_asymptote = round(asymptote, 2)  # Round to 2 decimal places
-                plt.axvline(x=float(asymptote), color='b', label=f'Start time: {rounded_asymptote:.2f}')
+                rounded_asymptote = round(asymptote, 4)  # Round to 2 decimal places
 
+                if calculateColor == 1:
+                    value = 'b'
+                else: 
+                    value = 'g'
+                plt.axvline(x=float(asymptote), color=value, label=f'Start time: {rounded_asymptote:.4f}')
+ 
 
         df = pd.DataFrame({
             'voltage': voltageAmount,
@@ -371,9 +363,6 @@ class Measurements:
         window_size = 100
         voltage_sum = df['voltage'].values
         times = df['times'].values
-
-
-
 
 
         # Create sliding windows using the strided trick
@@ -395,20 +384,25 @@ class Measurements:
         
         plt.plot(median_window['times'], median_window['voltage_median'], label=f'PowerPack Measurements: {name}', color = "red")
 
-        plt.xlabel('Time in sec')
-        plt.ylabel('A, Watts')
-        plt.title(f'{name} Power Consumption Graph')
+        plt.xlabel('Time (seconds)')
+        plt.ylabel('Watts')
+        plt.title(f'{name.upper()} Power Consumption Graph (Power Cap = {powerCap}W)')
         plt.legend()
         plt.grid(True)
         ax = plt.gca()
-        # ax.xaxis.set_major_locator(ticker.MultipleLocator(base=increment))
-
+        ax.xaxis.set_major_locator(ticker.MultipleLocator(base=2)) #how much x-axis is incremented by
 
         now = datetime.now()
         date_str = now.strftime("%Y-%m-%d %H:%M:%S")
-        #plt.savefig(f'./graphs/{name}{date_str}.svg')
-        plt.savefig(f'./graphs/{name}{date_str}.png')
-        plt.show
+
+        # if folder does not exist, create it
+        graphs_folder = "./graphs"
+        if not os.path.exists(graphs_folder):
+            os.mkdir(graphs_folder)
+
+        # Add plot to folder
+        plt.savefig(f'./graphs/{name}_with_{powerCap}_{date_str}.png')
+        plt.close()
 
 
     def lengths(self):
