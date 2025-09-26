@@ -15,7 +15,7 @@ def reader(file):
     with open(file, 'r') as f:
         data = json.load(f)
     print(data)
-    print(type(data))
+    # print(type(data))
     return data
 
 
@@ -57,8 +57,10 @@ def start_server(ip, port):
             continue
         with client_socket:
 
-            # Connection established
             print(f"Connection from {client_address} established.")
+
+            msg = client_socket.recv(64).decode('utf-8')
+            print(f"Client requested workload: {msg}")
 
             # This will send this computer time
             processStarting = str(time.time())
@@ -66,22 +68,37 @@ def start_server(ip, port):
             # Process Starting message being sent
             client_socket.sendall(processStarting.encode('utf-8'))
 
-            # Running the class
-            began = str(time.time())
 
-            # Running communication script
-            os.chdir('../inBandMeasurements/benchmarking/')
-            subprocess.run(['python', 'communicationTest.py'])
-            os.chdir('../../outBandMeasurements/')
+            # # Running the class
+            # began = str(time.time())
 
-            # time.sleep(5)
+            # # Running communication script
+            # os.chdir('../inBandMeasurements/benchmarking/')
+            # subprocess.run(['python', 'communicationTest.py'])
+            # os.chdir('../../outBandMeasurements/')
 
-            # time.sleep(20)
+            # # time.sleep(5)
+
+            # # time.sleep(20)
             
-            # Process Finished message being sent
-            processComplete = "Process finished"
-            ended = str(time.time())
-            print(processComplete)
+            # # Process Finished message being sent
+            # processComplete = "Process finished"
+            # ended = str(time.time())
+            # print(processComplete)
+
+            # Decide which workload to run
+            os.chdir("../inBandMeasurements/benchmarking/")
+            if msg == "run_cpu":
+                subprocess.run(["python", "communicationTest.py"])
+            elif msg == "run_gpu":
+                subprocess.run(["python", "gpuTest.py"])  # <-- swap in GPU workload
+            else:
+                print("Unknown workload type, skipping")
+            os.chdir("../../outBandMeasurements/")
+
+            # Send "stop" timestamp
+            processComplete = str(time.time())
+            print("Process finished")
             client_socket.sendall(processComplete.encode('utf-8'))
 
 
