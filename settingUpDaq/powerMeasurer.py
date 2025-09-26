@@ -121,7 +121,7 @@ class PowerPack:
         self.PowerPack.makeCSV()
 
 
-    def plot(self, partsOfInterest, verticalAsymtotes=None):
+    def plot(self, partsOfInterest, powerCap, verticalAsymtotes=None, pattern=None):
         '''
         This will make a graph of the data for each part of the computer.Use this
         only after start and stopping the powerpack otherwise no data to be read.
@@ -132,14 +132,14 @@ class PowerPack:
         rate_of_samples = self.rateOfSamples
 
         times = np.arange(0, length+1) / rate_of_samples
-        print(times)
+        #print(times)
 
 
         for part in partsOfInterest:
             if verticalAsymtotes:
-                self.PowerPack.plot(times, verticalAsymtotes, part)
+                self.PowerPack.plot(times, part, powerCap, verticalAsymtotes, pattern)
             else:
-                self.PowerPack.plot(times, part)
+                self.PowerPack.plot(times, part, powerCap)
 
 
     
@@ -148,11 +148,11 @@ class PowerPack:
 if __name__ == "__main__":
     power_pack = PowerPack(numberOfSamplesToGather=500, rateOfSamples=1000, ohms=0.003)
 
-    motherboard = [
-        ["cDAQ2Mod8/ai0","cDAQ2Mod8/ai1","cDAQ2Mod8/ai2","cDAQ2Mod8/ai3"],
-        ["cDAQ2Mod6/ai0", "cDAQ2Mod6/ai1", "cDAQ2Mod6/ai2", "cDAQ2Mod6/ai3", "cDAQ2Mod6/ai4"],
-        ["cDAQ2Mod2/ai17", "cDAQ2Mod2/ai18", "cDAQ2Mod2/ai19"]
-    ]
+    # motherboard = [
+    #     ["cDAQ2Mod8/ai0","cDAQ2Mod8/ai1","cDAQ2Mod8/ai2","cDAQ2Mod8/ai3"],
+    #     ["cDAQ2Mod6/ai0", "cDAQ2Mod6/ai1", "cDAQ2Mod6/ai2", "cDAQ2Mod6/ai3", "cDAQ2Mod6/ai4"],
+    #     ["cDAQ2Mod2/ai17", "cDAQ2Mod2/ai18", "cDAQ2Mod2/ai19"]
+    # ]
 
 
     # cpu = [
@@ -237,7 +237,7 @@ if __name__ == "__main__":
 
 
     
-    power_pack.plot(['disk'])
+    power_pack.plot(['cpu'], powerCap=170)
     # Example of a adding a asymtote that occurs on the 1st second.
     # In this case, it is named cool
     #asymtote = {1:"cool"}
