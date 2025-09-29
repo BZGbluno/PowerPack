@@ -14,7 +14,7 @@ from datetime import datetime
 import time
 
 # SERVER_IP = "127.0.0.1" # refers to your own machine 
-SERVER_IP = '172.29.119.214'
+SERVER_IP = '128.173.55.95'
 SERVER_PORT = 25565
 
 def reader(file):
@@ -98,7 +98,7 @@ cpu = [
 ]
 
 # initalize parts
-power_pack.initializePart("cpu", cpu)
+power_pack.initializePart("cpu")
 # power_pack.initializePart("gpu", lineMatrix)
 # power_pack.initializePart("motherboard", lineMat)
 
